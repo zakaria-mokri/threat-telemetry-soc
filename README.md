@@ -18,7 +18,7 @@
 <br>
 
 <p align="center">
-  <img src="public/assets/images/dashborad-feed.jpg" alt="Live Telemetry Feed" width="100%">
+  <img src="https://github.com/user-attachments/assets/36386113-d97d-4495-b8da-bb8fcd5f5f83" alt="dashboard-feed" width="100%">
 </p>
 
 ## About Laravel
