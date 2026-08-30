@@ -1,15 +1,23 @@
 <p align="center">
   <a href="https://laravel.com" target="_blank">
-    <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
+    <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="350" alt="Laravel Logo">
   </a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=flat&logo=laravel&logoColor=white" alt="Laravel 11">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.0-38B2AC?style=flat&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/WebSockets-Reverb-4A154B?style=flat&logo=laravel&logoColor=white" alt="Laravel Reverb">
   <img src="https://img.shields.io/badge/License-MIT-brightgreen" alt="License MIT">
 </p>
 
-## THREAT // TELEMETRY SOC
+# THREAT // TELEMETRY SOC
+
+A real-time Security Operations Center (SOC) dashboard designed to ingest, visualize, and monitor global threat intelligence and live attack vectors. Built with Laravel 11, WebSockets, and modern front-end components for high-concurrency event telemetry.
+
+---
+
+## 📸 Dashboard Overview
 
 <p align="center">
   <img src="public/assets/images/dashboard-map.jpg" alt="SOC Threat Map" width="100%">
@@ -18,36 +26,42 @@
 <br>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/36386113-d97d-4495-b8da-bb8fcd5f5f83" alt="dashboard-feed" width="100%">
+  <img src="https://github.com/user-attachments/assets/36386113-d97d-4495-b8da-bb8fcd5f5f83" alt="Live Telemetry Feed" width="100%">
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🔥 Key Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+* **Global Attack Arc Mapping**: Visualizes geographical threat origins, targeted endpoints, and high-risk vector trajectories in real time.
+* **Real-Time Telemetry Feed**: Live event streaming for incoming security events including DDoS vectors, XSS payloads, and unauthorized port scans.
+* **Metrics & Severity Breakdown**: Aggregates global threat severity levels (Critical, High, Medium, Low) and event velocity ($E/s$).
+* **WebSocket Integration**: Low-latency event dispatching using Laravel Reverb for real-time telemetry rendering without page reloads.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🛠️ Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+* **Backend Framework**: Laravel 11 (PHP 8.2+)
+* **Real-Time Engine**: Laravel Reverb / WebSockets
+* **Frontend UI**: Blade, Tailwind CSS, Alpine.js / React
+* **Database**: MySQL / PostgreSQL
+* **API Architecture**: RESTful Event Ingestion Pipelines
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## ⚡ Getting Started
 
-## Agentic Development
+### Prerequisites
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+* PHP >= 8.2
+* Composer
+* Node.js & NPM
+* MySQL or PostgreSQL database
 
-```bash
-composer require laravel/boost --dev
+### Installation
 
-php artisan boost:install
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/your-username/threat-telemetry-soc.git](https://github.com/your-username/threat-telemetry-soc.git)
+   cd threat-telemetry-soc
