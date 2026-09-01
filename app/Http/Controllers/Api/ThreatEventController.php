@@ -45,4 +45,13 @@ class ThreatEventController extends Controller
             'data' => $threatEvent->fresh(),
         ]);
     }
+
+    public function destroy(ThreatEvent $threatEvent): JsonResponse
+    {
+        $threatEvent->delete();
+
+        return response()->json([
+            'message' => 'Threat event deleted successfully.',
+        ]);
+    }
 }

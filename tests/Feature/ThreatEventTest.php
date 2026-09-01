@@ -170,4 +170,31 @@ class ThreatEventTest extends TestCase
                 'severity',
             ]);
     }
+
+
+public function test_api_can_delete_a_threat_event(): void
+{
+    $event = ThreatEvent::factory()->create();
+
+    $response = $this->deleteJson("/api/threat-events/{$event->id}");
+
+    $response
+        ->assertStatus(200)
+        ->assertJson([
+            'message' => 'Threat event deleted successfully.',
+        ]);
+
+    $this->assertDatabaseMissing('threat_events', [
+        'id' => $event->id,
+    ]);
+}
+
+public function test_api_returns_404_when_deleting_missing_threat_event(): void
+{
+    $response = $this->deleteJson('/api/threat-events/999999');
+
+    $response->assertStatus(404);
+}
+
+
 }
