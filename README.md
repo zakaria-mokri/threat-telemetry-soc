@@ -6,7 +6,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?style=flat&logo=laravel&logoColor=white" alt="Laravel 13">
-  <img src="https://img.shields.io/badge/PHP-8.3+-777BB4?style=flat&logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/PHP-8.4+-777BB4?style=flat&logo=php&logoColor=white" alt="PHP 8.4+">
+  <img src="https://img.shields.io/badge/Sanctum-API_Auth-FF2D20?style=flat&logo=laravel&logoColor=white" alt="Laravel Sanctum">
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/Reverb-WebSockets-4A154B?style=flat&logo=laravel&logoColor=white" alt="Laravel Reverb">
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
 </p>
@@ -15,27 +17,33 @@
 
 ![Tests](https://github.com/zakaria-mokri/threat-telemetry-soc/actions/workflows/tests.yml/badge.svg)
 
-A Laravel-based Security Operations Center dashboard for collecting, storing, and visualizing threat telemetry.
+A Laravel-based Security Operations Center dashboard and REST API for collecting, storing, filtering, managing, and visualizing simulated threat telemetry.
 
-The project simulates a lightweight SOC environment where security events such as brute-force attempts, SQL injection, DDoS activity, port scans, and other suspicious traffic can be persisted, exposed through a REST API, and displayed through a monitoring dashboard.
+The project demonstrates backend engineering, API security, automated testing, continuous integration, containerization, real-time application architecture, and modern Laravel development practices.
 
 ---
 
 ## Overview
 
-Threat Telemetry SOC is designed as a portfolio project demonstrating backend engineering, API design, automated testing, real-time application architecture, and modern Laravel development practices.
+Threat Telemetry SOC simulates a lightweight Security Operations Center environment.
+
+Security events such as brute-force attempts, SQL injection attempts, DDoS activity, XSS attacks, and port scans can be persisted in the database, queried through a REST API, filtered by security attributes, and displayed through a monitoring dashboard.
 
 The application currently includes:
 
 - Persistent threat-event storage
 - SOC monitoring dashboard
-- REST API for threat events
-- Request validation
-- Pagination
+- Full CRUD REST API
+- Laravel Sanctum API protection
+- Request validation with Form Requests
+- Threat-event filtering
+- API pagination
 - Automated feature tests
 - API health monitoring
-- Real-time communication tooling with Laravel Reverb
+- Laravel Reverb real-time communication tooling
 - GitHub Actions continuous integration
+- Dockerized application environment
+- Dedicated API documentation
 
 ---
 
@@ -51,11 +59,11 @@ The application currently includes:
 
 ---
 
-## Features
+## Key Features
 
 ### Threat Event Management
 
-Threat events are stored with information such as:
+Threat events contain:
 
 - Source IP address
 - Destination IP address
@@ -63,7 +71,8 @@ Threat events are stored with information such as:
 - Severity
 - Geographic location
 - Payload details
-- Creation and update timestamps
+- Creation timestamp
+- Update timestamp
 
 Supported severity levels:
 
@@ -74,7 +83,7 @@ high
 critical
 ```
 
-Example threat types include:
+Example threat types:
 
 ```text
 SSH Brute Force
@@ -84,11 +93,53 @@ XSS
 Port Scan
 ```
 
+### API Security
+
+Read endpoints remain publicly accessible.
+
+Write operations are protected using Laravel Sanctum:
+
+```text
+POST
+PATCH
+DELETE
+```
+
+Unauthenticated write requests receive:
+
+```http
+401 Unauthorized
+```
+
+This keeps threat telemetry readable while preventing unauthorized mutation of stored security events.
+
+### Filtering
+
+Threat events can be filtered by:
+
+```text
+severity
+threat_type
+source_ip
+```
+
+Examples:
+
+```http
+GET /api/threat-events?severity=critical
+GET /api/threat-events?threat_type=SSH
+GET /api/threat-events?source_ip=203.0.113.50
+```
+
 ---
 
 ## REST API
 
-The application exposes a JSON API under `/api`.
+Base path:
+
+```text
+/api
+```
 
 ### Health Check
 
@@ -100,10 +151,12 @@ Example response:
 
 ```json
 {
-    "status": "ok",
-    "service": "threat-telemetry-soc"
+  "status": "ok",
+  "service": "threat-telemetry-soc"
 }
 ```
+
+---
 
 ### List Threat Events
 
@@ -119,21 +172,41 @@ Default pagination:
 20 events per page
 ```
 
+Optional filters:
+
+```text
+severity
+threat_type
+source_ip
+```
+
+Example:
+
+```http
+GET /api/threat-events?severity=critical
+```
+
+---
+
 ### Get Single Threat Event
 
 ```http
 GET /api/threat-events/{id}
 ```
 
-Returns a single threat event.
+Returns one threat event.
 
-A missing event returns:
+Missing records return:
 
 ```http
 404 Not Found
 ```
 
+---
+
 ### Create Threat Event
+
+Authentication required.
 
 ```http
 POST /api/threat-events
@@ -143,116 +216,244 @@ Example request:
 
 ```json
 {
+  "source_ip": "192.168.1.10",
+  "destination_ip": "10.0.0.5",
+  "threat_type": "SSH Brute Force",
+  "severity": "high",
+  "location": "DE",
+  "payload_details": "Multiple failed login attempts detected."
+}
+```
+
+Successful response:
+
+```http
+201 Created
+```
+
+Example:
+
+```json
+{
+  "message": "Threat event created successfully.",
+  "data": {
     "source_ip": "192.168.1.10",
     "destination_ip": "10.0.0.5",
     "threat_type": "SSH Brute Force",
     "severity": "high",
     "location": "DE",
     "payload_details": "Multiple failed login attempts detected."
+  }
 }
 ```
 
-Example successful response:
-
-```json
-{
-    "message": "Threat event created successfully.",
-    "data": {
-        "source_ip": "192.168.1.10",
-        "destination_ip": "10.0.0.5",
-        "threat_type": "SSH Brute Force",
-        "severity": "high",
-        "location": "DE",
-        "payload_details": "Multiple failed login attempts detected."
-    }
-}
-```
-
-Validation errors return:
+Invalid input returns:
 
 ```http
 422 Unprocessable Entity
 ```
 
+Unauthenticated requests return:
+
+```http
+401 Unauthorized
+```
+
+---
+
 ### Update Threat Event
+
+Authentication required.
 
 ```http
 PATCH /api/threat-events/{id}
 ```
 
-Example request:
+Partial updates are supported.
+
+Example:
 
 ```json
 {
+  "severity": "critical",
+  "threat_type": "DDoS"
+}
+```
+
+Successful response:
+
+```json
+{
+  "message": "Threat event updated successfully.",
+  "data": {
     "severity": "critical",
     "threat_type": "DDoS"
+  }
 }
 ```
 
-Example response:
+---
+
+### Delete Threat Event
+
+Authentication required.
+
+```http
+DELETE /api/threat-events/{id}
+```
+
+Successful response:
 
 ```json
 {
-    "message": "Threat event updated successfully.",
-    "data": {
-        "severity": "critical",
-        "threat_type": "DDoS"
-    }
+  "message": "Threat event deleted successfully."
 }
 ```
 
-Partial updates are supported.
+Missing records return:
+
+```http
+404 Not Found
+```
+
+---
+
+## API Endpoint Summary
+
+```text
+GET     /api/health
+GET     /api/threat-events
+GET     /api/threat-events/{id}
+POST    /api/threat-events
+PATCH   /api/threat-events/{id}
+DELETE  /api/threat-events/{id}
+```
+
+Public:
+
+```text
+GET /api/health
+GET /api/threat-events
+GET /api/threat-events/{id}
+```
+
+Protected with Sanctum:
+
+```text
+POST   /api/threat-events
+PATCH  /api/threat-events/{id}
+DELETE /api/threat-events/{id}
+```
+
+Full API reference:
+
+```text
+docs/api.md
+```
 
 ---
 
 ## API Validation
 
-Incoming threat-event data is validated using dedicated Laravel Form Request classes.
+Incoming create and update requests are validated using dedicated Laravel Form Request classes.
 
-Examples of enforced validation rules include:
+### Create Validation
+
+```text
+source_ip        required, valid IP address
+destination_ip   required, valid IP address
+threat_type      required, string, max 255
+severity         required, low|medium|high|critical
+location         optional, string, max 100
+payload_details  optional, string
+```
+
+### Update Validation
+
+Updates support partial request bodies.
 
 ```text
 source_ip        valid IP address
 destination_ip   valid IP address
-threat_type      required string
-severity         low | medium | high | critical
-location         optional string
+threat_type      string, max 255
+severity         low|medium|high|critical
+location         optional string, max 100
 payload_details  optional string
 ```
 
-Invalid API requests receive structured JSON validation errors.
+Invalid API input receives structured JSON validation errors with:
+
+```http
+422 Unprocessable Entity
+```
+
+---
+
+## Authentication
+
+Laravel Sanctum provides API authentication for write operations.
+
+The `User` model uses:
+
+```php
+Laravel\Sanctum\HasApiTokens
+```
+
+Protected routes use:
+
+```php
+Route::middleware('auth:sanctum')->group(function () {
+    // protected write endpoints
+});
+```
+
+This prevents unauthenticated clients from creating, modifying, or deleting threat telemetry.
 
 ---
 
 ## Automated Testing
 
-The project includes unit and feature tests using PHPUnit and Laravel's testing utilities.
-
-Current coverage includes:
-
-- Application availability
-- API health endpoint
-- Dashboard threat-event loading
-- Paginated threat-event API
-- Single threat-event retrieval
-- Missing event handling
-- Threat-event creation
-- Create-request validation
-- Threat-event updates
-- Update-request validation
+The application uses PHPUnit and Laravel's testing utilities.
 
 Current test suite:
 
 ```text
-16 tests
-81 assertions
+17 tests
+82 assertions
 ```
 
-Run locally with:
+Coverage currently includes:
+
+- Application availability
+- Health endpoint
+- Dashboard threat-event loading
+- Paginated threat-event listing
+- Filtering by severity
+- Filtering by threat type
+- Filtering by source IP
+- Single threat-event retrieval
+- Missing event handling
+- Unauthorized write protection
+- Authenticated threat-event creation
+- Create-request validation
+- Authenticated threat-event updates
+- Update-request validation
+- Authenticated threat-event deletion
+- Missing delete target handling
+
+Run all tests:
 
 ```bash
 php artisan test
 ```
+
+Example result:
+
+```text
+Tests: 17 passed (82 assertions)
+```
+
+The test suite uses Laravel's `RefreshDatabase` functionality to isolate database state between feature tests.
 
 ---
 
@@ -269,7 +470,7 @@ The CI pipeline performs:
 
 ```text
 Repository checkout
-PHP environment setup
+PHP 8.4 environment setup
 Node.js environment setup
 Composer dependency installation
 NPM dependency installation
@@ -278,13 +479,67 @@ Frontend production build
 Automated PHPUnit tests
 ```
 
-The current workflow runs on PHP 8.4 because the installed Symfony 8 dependencies require PHP 8.4.1 or newer.
-
-Workflow configuration:
+Workflow:
 
 ```text
 .github/workflows/tests.yml
 ```
+
+The workflow currently runs on PHP 8.4 because the installed Symfony 8 dependencies require PHP 8.4.1 or newer.
+
+---
+
+## Docker
+
+The application includes a tested Docker configuration.
+
+Docker support includes:
+
+```text
+PHP 8.4
+Composer
+Node.js
+NPM
+SQLite PHP extensions
+Laravel dependencies
+Frontend production build
+Laravel application server
+```
+
+### Build the Image
+
+```bash
+docker build -t threat-telemetry-soc .
+```
+
+### Run the Container
+
+```bash
+docker run --rm -p 8000:8000 threat-telemetry-soc
+```
+
+The application becomes available at:
+
+```text
+http://127.0.0.1:8000
+```
+
+Verify the containerized API:
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "service": "threat-telemetry-soc"
+}
+```
+
+The Docker image has been successfully built and the health endpoint verified from a running container.
 
 ---
 
@@ -294,6 +549,7 @@ Workflow configuration:
 
 - PHP 8.4+
 - Laravel 13
+- Laravel Sanctum
 - Laravel Reverb
 - Laravel Broadcasting
 - Eloquent ORM
@@ -309,20 +565,28 @@ Workflow configuration:
 - Laravel Echo
 - Pusher JS
 
-### Development & Quality
+### Data & Testing
 
+- SQLite
+- Eloquent factories
+- Laravel `RefreshDatabase`
+- PHPUnit feature tests
+
+### DevOps & Tooling
+
+- Docker
 - Composer
 - NPM
+- Git
+- GitHub Actions
 - Laravel Pint
 - Laravel Pail
-- GitHub Actions
-- SQLite for automated tests
 
 ---
 
 ## Architecture
 
-A simplified request flow:
+Simplified application flow:
 
 ```text
 Client
@@ -330,33 +594,46 @@ Client
   v
 Laravel Routes
   |
-  v
-Controllers
+  +---- Public GET Endpoints
   |
-  +----> Form Request Validation
+  +---- Sanctum Protected Write Endpoints
+  |
+  v
+Form Request Validation
+  |
+  v
+ThreatEventController
   |
   v
 ThreatEvent Model
   |
   v
 Database
+  |
+  v
+JSON Response
 ```
 
-For API creation and update requests:
+Protected write flow:
 
 ```text
 HTTP Request
     |
     v
-Form Request
+auth:sanctum
     |
-    +---- invalid ----> 422 JSON response
+    +---- unauthenticated ----> 401
+    |
+    v
+Form Request Validation
+    |
+    +---- invalid ------------> 422
     |
     v
 Controller
     |
     v
-Eloquent Model
+Eloquent ORM
     |
     v
 Database
@@ -369,8 +646,6 @@ JSON Response
 
 ## Project Structure
 
-Important directories:
-
 ```text
 app/
 ├── Http/
@@ -381,13 +656,22 @@ app/
 │       ├── StoreThreatEventRequest.php
 │       └── UpdateThreatEventRequest.php
 │
-├── Models/
-│   └── ThreatEvent.php
+└── Models/
+    ├── ThreatEvent.php
+    └── User.php
+
+config/
+└── sanctum.php
 
 database/
 ├── factories/
 │   └── ThreatEventFactory.php
 └── migrations/
+    ├── create_threat_events_table.php
+    └── create_personal_access_tokens_table.php
+
+docs/
+└── api.md
 
 routes/
 ├── api.php
@@ -396,82 +680,88 @@ routes/
 
 tests/
 ├── Feature/
+│   ├── ExampleTest.php
+│   ├── HealthApiTest.php
+│   └── ThreatEventTest.php
 └── Unit/
 
 .github/
 └── workflows/
     └── tests.yml
+
+Dockerfile
+.dockerignore
 ```
 
 ---
 
 ## Local Development
 
-### 1. Clone the repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/zakaria-mokri/threat-telemetry-soc.git
 cd threat-telemetry-soc
 ```
 
-### 2. Install PHP dependencies
+### 2. Install PHP Dependencies
 
 ```bash
 composer install
 ```
 
-### 3. Install frontend dependencies
+### 3. Install Frontend Dependencies
 
 ```bash
 npm install
 ```
 
-### 4. Configure the environment
+### 4. Configure Environment
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-Configure your preferred database inside `.env`.
-
-For SQLite:
+### 5. Configure SQLite
 
 ```bash
 touch database/database.sqlite
 ```
 
-Then configure:
+Set:
 
 ```env
 DB_CONNECTION=sqlite
 ```
 
-### 5. Run migrations
+### 6. Run Migrations
 
 ```bash
 php artisan migrate
 ```
 
-### 6. Build frontend assets
+This creates the application tables including Sanctum personal access tokens.
+
+### 7. Build Frontend
 
 ```bash
 npm run build
 ```
 
-For frontend development:
+For development:
 
 ```bash
 npm run dev
 ```
 
-### 7. Start Laravel
+### 8. Start Laravel
 
 ```bash
 php artisan serve
 ```
 
-The application will normally be available at:
+Application:
 
 ```text
 http://127.0.0.1:8000
@@ -481,19 +771,22 @@ http://127.0.0.1:8000
 
 ## Running Tests
 
-Run the complete suite:
-
 ```bash
 php artisan test
 ```
 
-The test environment uses an isolated database through Laravel's `RefreshDatabase` testing support.
+Current result:
+
+```text
+17 passed
+82 assertions
+```
 
 ---
 
 ## Generate Sample Threat Events
 
-The project includes a `ThreatEventFactory` that generates realistic test data including randomized:
+The `ThreatEventFactory` generates realistic test data including:
 
 ```text
 IPv4 addresses
@@ -503,13 +796,13 @@ Country codes
 Payload descriptions
 ```
 
-Example usage through Laravel Tinker:
+Open Tinker:
 
 ```bash
 php artisan tinker
 ```
 
-Then:
+Generate sample events:
 
 ```php
 App\Models\ThreatEvent::factory()->count(20)->create();
@@ -517,51 +810,72 @@ App\Models\ThreatEvent::factory()->count(20)->create();
 
 ---
 
-## Current Development Status
+## Development Status
 
-Completed:
+### Completed
 
 - Threat-event database model
 - Threat-event factory
 - SOC dashboard
-- Health-check API
-- Paginated threat-event API
-- Single threat-event API
-- Threat-event creation API
-- Threat-event update API
-- Request validation
-- Automated PHPUnit tests
+- Health-check endpoint
+- Full CRUD REST API
+- Paginated API responses
+- Single-event retrieval
+- Threat-event filtering
+- Form Request validation
+- Laravel Sanctum integration
+- Protected write endpoints
+- Authentication regression test
+- PHPUnit feature tests
+- 17 passing automated tests
+- 82 assertions
 - GitHub Actions CI
 - Production frontend build verification
+- Docker image
+- Docker runtime verification
+- API documentation
+- Meaningful incremental Git history
 
-Planned improvements:
+### Remaining
 
-- Authentication and authorization
-- API token protection
-- Role-based access control
-- Delete/archive workflow
-- API filtering and search
-- OpenAPI documentation
-- Dockerized development environment
+- OpenAPI / Swagger specification
 - Public deployed demo
-- Expanded security-focused test coverage
+- Optional role-based authorization
+- Additional security-focused edge-case tests
 
 ---
 
-## Engineering Goals
+## Engineering Practices Demonstrated
 
-This project is being developed with an emphasis on professional software engineering practices rather than only feature implementation.
+This project emphasizes maintainable engineering practices rather than feature implementation alone.
 
-Key goals include:
+It demonstrates:
 
-- Maintainable Laravel architecture
-- Explicit input validation
-- Predictable REST API behavior
+- RESTful API design
+- Authentication middleware
+- Explicit request validation
+- Eloquent model factories
 - Automated regression testing
+- Isolated test databases
 - Continuous integration
-- Reproducible development environments
-- Clear technical documentation
-- Incremental and meaningful Git history
+- Containerized environments
+- Reproducible builds
+- API documentation
+- Incremental Git commits
+- Clear separation of public and protected API operations
+
+---
+
+## Roadmap
+
+Next milestones:
+
+```text
+1. OpenAPI / Swagger documentation
+2. Public demo deployment
+3. Optional role-based authorization
+4. Additional API security tests
+```
 
 ---
 
