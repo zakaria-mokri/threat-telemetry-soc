@@ -41,6 +41,30 @@ Example response structure:
 }
 ```
 
+### Filtering
+
+The threat-event list endpoint supports optional query parameters.
+
+Filter by severity:
+
+```http
+GET /api/threat-events?severity=critical
+```
+
+Filter by threat type:
+
+```http
+GET /api/threat-events?threat_type=SSH
+```
+
+Filter by source IP:
+
+```http
+GET /api/threat-events?source_ip=203.0.113.50
+```
+
+Filters can be combined with pagination.
+
 ---
 
 ## Get Threat Event
@@ -205,8 +229,6 @@ If the event does not exist:
 
 ### Create Request
 
-The following fields are validated when creating a threat event:
-
 ```text
 source_ip        required, valid IP address
 destination_ip   required, valid IP address
@@ -219,8 +241,6 @@ payload_details  optional, string
 ### Update Request
 
 Updates support partial request bodies.
-
-Fields are validated only when supplied:
 
 ```text
 source_ip        valid IP address
@@ -257,6 +277,24 @@ curl http://127.0.0.1:8000/api/health
 
 ```bash
 curl http://127.0.0.1:8000/api/threat-events
+```
+
+### Filter by Severity
+
+```bash
+curl "http://127.0.0.1:8000/api/threat-events?severity=critical"
+```
+
+### Filter by Threat Type
+
+```bash
+curl "http://127.0.0.1:8000/api/threat-events?threat_type=SSH"
+```
+
+### Filter by Source IP
+
+```bash
+curl "http://127.0.0.1:8000/api/threat-events?source_ip=203.0.113.50"
 ```
 
 ### Get Threat Event
@@ -304,8 +342,6 @@ curl -X DELETE http://127.0.0.1:8000/api/threat-events/1 \
 
 ## Current API Coverage
 
-The API currently supports:
-
 ```text
 GET     /api/health
 GET     /api/threat-events
@@ -315,11 +351,22 @@ PATCH   /api/threat-events/{id}
 DELETE  /api/threat-events/{id}
 ```
 
-Automated tests cover:
+Supported filters:
+
+```text
+severity
+threat_type
+source_ip
+```
+
+Automated tests currently cover:
 
 ```text
 Health endpoint
 Paginated threat-event listing
+Filtering by severity
+Filtering by threat type
+Filtering by source IP
 Single threat-event retrieval
 404 handling
 Threat-event creation

@@ -244,8 +244,8 @@ Current coverage includes:
 Current test suite:
 
 ```text
-11 tests
-68 assertions
+16 tests
+81 assertions
 ```
 
 Run locally with:
