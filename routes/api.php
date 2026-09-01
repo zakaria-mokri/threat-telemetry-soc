@@ -12,6 +12,9 @@ Route::get('/health', function () {
 
 Route::get('/threat-events', [ThreatEventController::class, 'index']);
 Route::get('/threat-events/{threatEvent}', [ThreatEventController::class, 'show']);
-Route::post('/threat-events', [ThreatEventController::class, 'store']);
-Route::patch('/threat-events/{threatEvent}', [ThreatEventController::class, 'update']);
-Route::delete('/threat-events/{threatEvent}', [ThreatEventController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/threat-events', [ThreatEventController::class, 'store']);
+    Route::patch('/threat-events/{threatEvent}', [ThreatEventController::class, 'update']);
+    Route::delete('/threat-events/{threatEvent}', [ThreatEventController::class, 'destroy']);
+});

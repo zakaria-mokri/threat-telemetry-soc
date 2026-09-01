@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\ThreatEvent;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ThreatEventTest extends TestCase
@@ -100,7 +102,9 @@ class ThreatEventTest extends TestCase
             'source_ip' => '198.51.100.10',
         ]);
 
-        $response = $this->getJson('/api/threat-events?source_ip=203.0.113.50');
+        $response = $this->getJson(
+            '/api/threat-events?source_ip=203.0.113.50'
+        );
 
         $response
             ->assertStatus(200)
@@ -116,7 +120,9 @@ class ThreatEventTest extends TestCase
             'severity' => 'medium',
         ]);
 
-        $response = $this->getJson("/api/threat-events/{$event->id}");
+        $response = $this->getJson(
+            "/api/threat-events/{$event->id}"
+        );
 
         $response
             ->assertStatus(200)
@@ -128,13 +134,29 @@ class ThreatEventTest extends TestCase
 
     public function test_api_returns_404_for_missing_threat_event(): void
     {
-        $response = $this->getJson('/api/threat-events/999999');
+        $response = $this->getJson(
+            '/api/threat-events/999999'
+        );
 
         $response->assertStatus(404);
     }
 
+    public function test_unauthenticated_user_cannot_create_threat_event(): void
+    {
+        $response = $this->postJson('/api/threat-events', [
+            'source_ip' => '192.168.1.10',
+            'destination_ip' => '10.0.0.5',
+            'threat_type' => 'SSH Brute Force',
+            'severity' => 'high',
+        ]);
+
+        $response->assertStatus(401);
+    }
+
     public function test_api_can_create_a_threat_event(): void
     {
+        Sanctum::actingAs(User::factory()->create());
+
         $payload = [
             'source_ip' => '192.168.1.10',
             'destination_ip' => '10.0.0.5',
@@ -144,15 +166,24 @@ class ThreatEventTest extends TestCase
             'payload_details' => 'Multiple failed login attempts detected.',
         ];
 
-        $response = $this->postJson('/api/threat-events', $payload);
+        $response = $this->postJson(
+            '/api/threat-events',
+            $payload
+        );
 
         $response
             ->assertStatus(201)
             ->assertJson([
                 'message' => 'Threat event created successfully.',
             ])
-            ->assertJsonPath('data.source_ip', '192.168.1.10')
-            ->assertJsonPath('data.severity', 'high');
+            ->assertJsonPath(
+                'data.source_ip',
+                '192.168.1.10'
+            )
+            ->assertJsonPath(
+                'data.severity',
+                'high'
+            );
 
         $this->assertDatabaseHas('threat_events', [
             'source_ip' => '192.168.1.10',
@@ -164,6 +195,8 @@ class ThreatEventTest extends TestCase
 
     public function test_api_rejects_invalid_threat_event_data(): void
     {
+        Sanctum::actingAs(User::factory()->create());
+
         $response = $this->postJson('/api/threat-events', [
             'source_ip' => 'not-an-ip',
             'destination_ip' => '',
@@ -183,23 +216,34 @@ class ThreatEventTest extends TestCase
 
     public function test_api_can_update_a_threat_event(): void
     {
+        Sanctum::actingAs(User::factory()->create());
+
         $event = ThreatEvent::factory()->create([
             'severity' => 'low',
             'threat_type' => 'Port Scan',
         ]);
 
-        $response = $this->patchJson("/api/threat-events/{$event->id}", [
-            'severity' => 'critical',
-            'threat_type' => 'DDoS',
-        ]);
+        $response = $this->patchJson(
+            "/api/threat-events/{$event->id}",
+            [
+                'severity' => 'critical',
+                'threat_type' => 'DDoS',
+            ]
+        );
 
         $response
             ->assertStatus(200)
             ->assertJson([
                 'message' => 'Threat event updated successfully.',
             ])
-            ->assertJsonPath('data.severity', 'critical')
-            ->assertJsonPath('data.threat_type', 'DDoS');
+            ->assertJsonPath(
+                'data.severity',
+                'critical'
+            )
+            ->assertJsonPath(
+                'data.threat_type',
+                'DDoS'
+            );
 
         $this->assertDatabaseHas('threat_events', [
             'id' => $event->id,
@@ -210,12 +254,17 @@ class ThreatEventTest extends TestCase
 
     public function test_api_rejects_invalid_update_data(): void
     {
+        Sanctum::actingAs(User::factory()->create());
+
         $event = ThreatEvent::factory()->create();
 
-        $response = $this->patchJson("/api/threat-events/{$event->id}", [
-            'source_ip' => 'invalid-ip',
-            'severity' => 'extreme',
-        ]);
+        $response = $this->patchJson(
+            "/api/threat-events/{$event->id}",
+            [
+                'source_ip' => 'invalid-ip',
+                'severity' => 'extreme',
+            ]
+        );
 
         $response
             ->assertStatus(422)
@@ -227,9 +276,13 @@ class ThreatEventTest extends TestCase
 
     public function test_api_can_delete_a_threat_event(): void
     {
+        Sanctum::actingAs(User::factory()->create());
+
         $event = ThreatEvent::factory()->create();
 
-        $response = $this->deleteJson("/api/threat-events/{$event->id}");
+        $response = $this->deleteJson(
+            "/api/threat-events/{$event->id}"
+        );
 
         $response
             ->assertStatus(200)
@@ -244,7 +297,11 @@ class ThreatEventTest extends TestCase
 
     public function test_api_returns_404_when_deleting_missing_threat_event(): void
     {
-        $response = $this->deleteJson('/api/threat-events/999999');
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->deleteJson(
+            '/api/threat-events/999999'
+        );
 
         $response->assertStatus(404);
     }
