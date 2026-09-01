@@ -11,454 +11,560 @@
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
 </p>
 
-# THREAT // TELEMETRY SOC
+# Threat Telemetry SOC
 
-THREAT // TELEMETRY SOC is a real-time Security Operations Center dashboard built with Laravel and WebSockets.
+![Tests](https://github.com/zakaria-mokri/threat-telemetry-soc/actions/workflows/tests.yml/badge.svg)
 
-The project focuses on visualizing simulated security telemetry, threat severity, attack activity, and live event updates through a responsive monitoring interface.
+A Laravel-based Security Operations Center dashboard for collecting, storing, and visualizing threat telemetry.
 
-It demonstrates real-time Laravel application development using Laravel Reverb, Laravel Echo, Alpine.js, Tailwind CSS, and event-driven frontend updates.
+The project simulates a lightweight SOC environment where security events such as brute-force attempts, SQL injection, DDoS activity, port scans, and other suspicious traffic can be persisted, exposed through a REST API, and displayed through a monitoring dashboard.
 
-## Dashboard Preview
+---
 
-<p align="center">
-  <img src="public/assets/images/dashboard-map.jpg" alt="SOC Threat Map" width="100%">
-</p>
+## Overview
 
-<br>
+Threat Telemetry SOC is designed as a portfolio project demonstrating backend engineering, API design, automated testing, real-time application architecture, and modern Laravel development practices.
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/36386113-d97d-4495-b8da-bb8fcd5f5f83" alt="Live Telemetry Feed" width="100%">
-</p>
+The application currently includes:
+
+- Persistent threat-event storage
+- SOC monitoring dashboard
+- REST API for threat events
+- Request validation
+- Pagination
+- Automated feature tests
+- API health monitoring
+- Real-time communication tooling with Laravel Reverb
+- GitHub Actions continuous integration
+
+---
+
+## Screenshots
+
+### SOC Dashboard
+
+![Threat Telemetry SOC Dashboard](public/assets/images/dashboard-map.jpg)
+
+### Live Telemetry
+
+![Live Threat Telemetry](https://github.com/user-attachments/assets/36386113-d97d-4495-b8da-bb8fcd5f5f83)
+
+---
 
 ## Features
 
-* Real-time security telemetry dashboard
-* Global threat visualization
-* Simulated attack origin and target mapping
-* Live telemetry event feed
-* Threat severity classification
-* Critical, high, medium, and low severity metrics
-* Event-rate monitoring
-* Laravel Reverb WebSocket integration
-* Laravel Echo frontend subscriptions
-* Alpine.js-driven interface behavior
-* Responsive dashboard layout
-* Tailwind CSS 4 styling
-* Vite-powered frontend asset pipeline
+### Threat Event Management
+
+Threat events are stored with information such as:
+
+- Source IP address
+- Destination IP address
+- Threat type
+- Severity
+- Geographic location
+- Payload details
+- Creation and update timestamps
+
+Supported severity levels:
+
+```text
+low
+medium
+high
+critical
+```
+
+Example threat types include:
+
+```text
+SSH Brute Force
+SQL Injection
+DDoS
+XSS
+Port Scan
+```
+
+---
+
+## REST API
+
+The application exposes a JSON API under `/api`.
+
+### Health Check
+
+```http
+GET /api/health
+```
+
+Example response:
+
+```json
+{
+    "status": "ok",
+    "service": "threat-telemetry-soc"
+}
+```
+
+### List Threat Events
+
+```http
+GET /api/threat-events
+```
+
+Returns paginated threat-event records.
+
+Default pagination:
+
+```text
+20 events per page
+```
+
+### Get Single Threat Event
+
+```http
+GET /api/threat-events/{id}
+```
+
+Returns a single threat event.
+
+A missing event returns:
+
+```http
+404 Not Found
+```
+
+### Create Threat Event
+
+```http
+POST /api/threat-events
+```
+
+Example request:
+
+```json
+{
+    "source_ip": "192.168.1.10",
+    "destination_ip": "10.0.0.5",
+    "threat_type": "SSH Brute Force",
+    "severity": "high",
+    "location": "DE",
+    "payload_details": "Multiple failed login attempts detected."
+}
+```
+
+Example successful response:
+
+```json
+{
+    "message": "Threat event created successfully.",
+    "data": {
+        "source_ip": "192.168.1.10",
+        "destination_ip": "10.0.0.5",
+        "threat_type": "SSH Brute Force",
+        "severity": "high",
+        "location": "DE",
+        "payload_details": "Multiple failed login attempts detected."
+    }
+}
+```
+
+Validation errors return:
+
+```http
+422 Unprocessable Entity
+```
+
+### Update Threat Event
+
+```http
+PATCH /api/threat-events/{id}
+```
+
+Example request:
+
+```json
+{
+    "severity": "critical",
+    "threat_type": "DDoS"
+}
+```
+
+Example response:
+
+```json
+{
+    "message": "Threat event updated successfully.",
+    "data": {
+        "severity": "critical",
+        "threat_type": "DDoS"
+    }
+}
+```
+
+Partial updates are supported.
+
+---
+
+## API Validation
+
+Incoming threat-event data is validated using dedicated Laravel Form Request classes.
+
+Examples of enforced validation rules include:
+
+```text
+source_ip        valid IP address
+destination_ip   valid IP address
+threat_type      required string
+severity         low | medium | high | critical
+location         optional string
+payload_details  optional string
+```
+
+Invalid API requests receive structured JSON validation errors.
+
+---
+
+## Automated Testing
+
+The project includes unit and feature tests using PHPUnit and Laravel's testing utilities.
+
+Current coverage includes:
+
+- Application availability
+- API health endpoint
+- Dashboard threat-event loading
+- Paginated threat-event API
+- Single threat-event retrieval
+- Missing event handling
+- Threat-event creation
+- Create-request validation
+- Threat-event updates
+- Update-request validation
+
+Current test suite:
+
+```text
+11 tests
+68 assertions
+```
+
+Run locally with:
+
+```bash
+php artisan test
+```
+
+---
+
+## Continuous Integration
+
+GitHub Actions automatically validates the project on:
+
+```text
+Pushes to main
+Pull requests
+```
+
+The CI pipeline performs:
+
+```text
+Repository checkout
+PHP environment setup
+Node.js environment setup
+Composer dependency installation
+NPM dependency installation
+Laravel environment configuration
+Frontend production build
+Automated PHPUnit tests
+```
+
+The current workflow runs on PHP 8.4 because the installed Symfony 8 dependencies require PHP 8.4.1 or newer.
+
+Workflow configuration:
+
+```text
+.github/workflows/tests.yml
+```
+
+---
 
 ## Tech Stack
 
 ### Backend
 
-* PHP 8.3+
-* Laravel 13
-* Laravel Reverb
-* Laravel Broadcasting
-
-### Real-Time Communication
-
-* WebSockets
-* Laravel Echo
-* Pusher JS
+- PHP 8.4+
+- Laravel 13
+- Laravel Reverb
+- Laravel Broadcasting
+- Eloquent ORM
+- Laravel Form Requests
+- PHPUnit
 
 ### Frontend
 
-* Blade
-* Alpine.js 3
-* Tailwind CSS 4
-* Vite 8
+- Blade
+- Alpine.js
+- Tailwind CSS 4
+- Vite 8
+- Laravel Echo
+- Pusher JS
 
-### Development & Testing
+### Development & Quality
 
-* PHPUnit 12
-* Laravel Pint
-* Laravel Pail
-* Faker
-* Mockery
+- Composer
+- NPM
+- Laravel Pint
+- Laravel Pail
+- GitHub Actions
+- SQLite for automated tests
+
+---
 
 ## Architecture
 
-```text
-Security Telemetry / Events
-           │
-           ▼
-     Laravel Backend
-           │
-           ├── Event Generation
-           │
-           ├── Application Logic
-           │
-           └── Broadcasting
-                  │
-                  ▼
-           Laravel Reverb
-                  │
-                  ▼
-             WebSocket
-                  │
-                  ▼
-           Laravel Echo
-                  │
-                  ▼
-        Alpine.js Dashboard
-                  │
-                  ▼
-      Real-Time SOC Interface
-```
-
-The application uses Laravel's broadcasting system together with Reverb to push events to connected clients without requiring full-page refreshes.
-
-## Real-Time Event Flow
-
-A typical event flow follows this process:
+A simplified request flow:
 
 ```text
-Security Event
-     │
-     ▼
-Laravel Application
-     │
-     ▼
-Broadcast Event
-     │
-     ▼
-Laravel Reverb
-     │
-     ▼
-WebSocket Connection
-     │
-     ▼
-Laravel Echo
-     │
-     ▼
-Dashboard Update
+Client
+  |
+  v
+Laravel Routes
+  |
+  v
+Controllers
+  |
+  +----> Form Request Validation
+  |
+  v
+ThreatEvent Model
+  |
+  v
+Database
 ```
 
-This architecture allows dashboard components to react to new telemetry as events are broadcast.
-
-## Frontend Real-Time Integration
-
-The frontend initializes Laravel Echo and Alpine.js through the application's JavaScript entry point.
+For API creation and update requests:
 
 ```text
-resources/js/app.js
-        │
-        ├── Laravel Echo
-        │
-        └── Alpine.js
+HTTP Request
+    |
+    v
+Form Request
+    |
+    +---- invalid ----> 422 JSON response
+    |
+    v
+Controller
+    |
+    v
+Eloquent Model
+    |
+    v
+Database
+    |
+    v
+JSON Response
 ```
 
-Laravel Echo handles real-time broadcast subscriptions, while Alpine.js provides lightweight reactive behavior for dashboard components.
-
-## Dashboard
-
-The main application route renders the SOC dashboard through Laravel's `DashboardController`.
-
-```http
-GET /
-```
-
-The dashboard presents threat telemetry and monitoring information through a single operational interface.
-
-## Threat Telemetry
-
-The interface is designed around common SOC-style telemetry concepts, including:
-
-* Threat origin
-* Target endpoint
-* Attack type
-* Severity
-* Event timestamp
-* Event frequency
-* Threat activity
-* Operational metrics
-
-Example simulated threat categories may include:
-
-```text
-DDoS
-XSS
-Port Scan
-Unauthorized Access
-Suspicious Network Activity
-```
-
-The project is intended as a visualization and software engineering demonstration rather than a production intrusion-detection system.
+---
 
 ## Project Structure
 
+Important directories:
+
 ```text
-.
-├── app/
-│   ├── Events/
-│   ├── Http/
-│   │   └── Controllers/
-│   ├── Models/
-│   └── Providers/
+app/
+├── Http/
+│   ├── Controllers/
+│   │   └── Api/
+│   │       └── ThreatEventController.php
+│   └── Requests/
+│       ├── StoreThreatEventRequest.php
+│       └── UpdateThreatEventRequest.php
 │
-├── bootstrap/
-├── config/
-├── database/
-│   ├── factories/
-│   ├── migrations/
-│   └── seeders/
-│
-├── public/
-│   └── assets/
-│       └── images/
-│
-├── resources/
-│   ├── css/
-│   ├── js/
-│   │   ├── app.js
-│   │   └── echo.js
-│   └── views/
-│
-├── routes/
-│   ├── channels.php
-│   ├── console.php
-│   └── web.php
-│
-├── storage/
-├── tests/
-├── .env.example
-├── artisan
-├── composer.json
-├── package.json
-├── phpunit.xml
-└── vite.config.js
+├── Models/
+│   └── ThreatEvent.php
+
+database/
+├── factories/
+│   └── ThreatEventFactory.php
+└── migrations/
+
+routes/
+├── api.php
+├── web.php
+└── channels.php
+
+tests/
+├── Feature/
+└── Unit/
+
+.github/
+└── workflows/
+    └── tests.yml
 ```
 
-## Getting Started
+---
 
-### Requirements
+## Local Development
 
-Make sure the following are installed:
-
-* PHP 8.3+
-* Composer
-* Node.js
-* npm
-
-## 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/zakaria-mokri/threat-telemetry-soc.git
 cd threat-telemetry-soc
 ```
 
-## 2. Install and Configure the Application
-
-The repository includes a Composer setup script.
-
-Run:
-
-```bash
-composer run setup
-```
-
-This performs the initial Laravel setup, including dependency installation, environment configuration, migrations, frontend dependency installation, and asset compilation.
-
-Alternatively, configure the project manually.
-
-Install PHP dependencies:
+### 2. Install PHP dependencies
 
 ```bash
 composer install
 ```
 
-Create the environment file:
-
-```bash
-cp .env.example .env
-```
-
-Generate the application key:
-
-```bash
-php artisan key:generate
-```
-
-Run database migrations:
-
-```bash
-php artisan migrate
-```
-
-Install frontend dependencies:
+### 3. Install frontend dependencies
 
 ```bash
 npm install
 ```
 
-Build frontend assets:
+### 4. Configure the environment
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure your preferred database inside `.env`.
+
+For SQLite:
+
+```bash
+touch database/database.sqlite
+```
+
+Then configure:
+
+```env
+DB_CONNECTION=sqlite
+```
+
+### 5. Run migrations
+
+```bash
+php artisan migrate
+```
+
+### 6. Build frontend assets
 
 ```bash
 npm run build
 ```
 
-## 3. Start the Development Environment
-
-Run:
+For frontend development:
 
 ```bash
-composer run dev
+npm run dev
 ```
 
-Alternatively, start the services individually.
-
-Laravel application:
+### 7. Start Laravel
 
 ```bash
 php artisan serve
 ```
 
-Vite:
-
-```bash
-npm run dev
-```
-
-Laravel Reverb:
-
-```bash
-php artisan reverb:start
-```
-
-The Laravel application will normally be available at:
+The application will normally be available at:
 
 ```text
-http://localhost:8000
+http://127.0.0.1:8000
 ```
 
-## WebSocket Configuration
+---
 
-Laravel Reverb requires broadcasting configuration in the application environment.
+## Running Tests
 
-Your `.env` configuration should contain the broadcasting and Reverb values required by your local environment.
-
-Example structure:
-
-```env
-BROADCAST_CONNECTION=reverb
-
-REVERB_APP_ID=your_app_id
-REVERB_APP_KEY=your_app_key
-REVERB_APP_SECRET=your_app_secret
-
-REVERB_HOST=localhost
-REVERB_PORT=8080
-REVERB_SCHEME=http
-```
-
-Do not commit real production credentials or secrets to GitHub.
-
-## Frontend Development
-
-Run the Vite development server with:
-
-```bash
-npm run dev
-```
-
-Create a production build with:
-
-```bash
-npm run build
-```
-
-## Testing
-
-Run the Laravel test suite with:
-
-```bash
-composer test
-```
-
-or:
+Run the complete suite:
 
 ```bash
 php artisan test
 ```
 
-## Code Quality
+The test environment uses an isolated database through Laravel's `RefreshDatabase` testing support.
 
-Laravel Pint is included for PHP code formatting.
+---
 
-Run:
+## Generate Sample Threat Events
 
-```bash
-./vendor/bin/pint
+The project includes a `ThreatEventFactory` that generates realistic test data including randomized:
+
+```text
+IPv4 addresses
+Threat types
+Severity levels
+Country codes
+Payload descriptions
 ```
 
-Laravel Pail is also included for application log inspection during development.
+Example usage through Laravel Tinker:
 
-## Engineering Concepts Demonstrated
+```bash
+php artisan tinker
+```
 
-This project demonstrates experience with:
+Then:
 
-* Laravel application development
-* PHP backend development
-* Event-driven architecture
-* WebSocket communication
-* Laravel Broadcasting
-* Laravel Reverb
-* Laravel Echo
-* Real-time frontend updates
-* Blade templates
-* Alpine.js
-* Tailwind CSS
-* Responsive dashboard design
-* Vite
-* Server-to-client event delivery
-* Environment-based configuration
-* Automated testing with PHPUnit
-* PHP code formatting with Laravel Pint
+```php
+App\Models\ThreatEvent::factory()->count(20)->create();
+```
 
-## Security Context
+---
 
-THREAT // TELEMETRY SOC is designed as a software engineering and visualization project.
+## Current Development Status
 
-The dashboard represents SOC-style security telemetry but is not intended to replace a production SIEM, IDS, IPS, EDR, or other enterprise security monitoring platform.
+Completed:
 
-Threat events and attack visualizations should be understood as simulated or application-provided telemetry unless connected to a real security data source.
+- Threat-event database model
+- Threat-event factory
+- SOC dashboard
+- Health-check API
+- Paginated threat-event API
+- Single threat-event API
+- Threat-event creation API
+- Threat-event update API
+- Request validation
+- Automated PHPUnit tests
+- GitHub Actions CI
+- Production frontend build verification
 
-## Future Improvements
+Planned improvements:
 
-Potential improvements include:
+- Authentication and authorization
+- API token protection
+- Role-based access control
+- Delete/archive workflow
+- API filtering and search
+- OpenAPI documentation
+- Dockerized development environment
+- Public deployed demo
+- Expanded security-focused test coverage
 
-* REST API for external threat event ingestion
-* Authenticated event ingestion endpoints
-* Persistent threat event storage
-* PostgreSQL-backed telemetry history
-* Redis caching
-* Queue-based event processing
-* Authentication and role-based access control
-* Analyst accounts and permissions
-* Event filtering and search
-* Threat severity filtering
-* Historical trend charts
-* Incident creation from threat events
-* Threat acknowledgment workflows
-* MITRE ATT&CK mapping
-* GeoIP enrichment
-* External threat intelligence feeds
-* Rate limiting
-* API authentication
-* Expanded PHPUnit feature tests
-* GitHub Actions CI
-* Docker development environment
-* Structured logging and observability
+---
 
-## Purpose
+## Engineering Goals
 
-This project was built to explore real-time application architecture using Laravel's event broadcasting ecosystem.
+This project is being developed with an emphasis on professional software engineering practices rather than only feature implementation.
 
-It combines backend event handling, WebSocket communication, reactive frontend behavior, and a SOC-inspired interface to demonstrate how Laravel can be used to build live monitoring applications.
+Key goals include:
 
-## Disclaimer
+- Maintainable Laravel architecture
+- Explicit input validation
+- Predictable REST API behavior
+- Automated regression testing
+- Continuous integration
+- Reproducible development environments
+- Clear technical documentation
+- Incremental and meaningful Git history
 
-This repository is an educational and portfolio software engineering project.
+---
 
-It does not provide production-grade threat detection or security monitoring capabilities and should not be treated as a substitute for professional cybersecurity infrastructure.
+## License
+
+This project is intended for educational and portfolio purposes.
