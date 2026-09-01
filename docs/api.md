@@ -98,6 +98,22 @@ Successful response:
 201 Created
 ```
 
+Example response:
+
+```json
+{
+  "message": "Threat event created successfully.",
+  "data": {
+    "source_ip": "192.168.1.10",
+    "destination_ip": "10.0.0.5",
+    "threat_type": "SSH Brute Force",
+    "severity": "high",
+    "location": "DE",
+    "payload_details": "Multiple failed login attempts detected."
+  }
+}
+```
+
 Validation rules:
 
 ```text
@@ -121,7 +137,7 @@ Invalid input returns:
 
 ### PATCH `/api/threat-events/{id}`
 
-Partial updates are supported.
+Partially updates an existing threat event.
 
 Example request:
 
@@ -139,8 +155,12 @@ Successful response:
   "message": "Threat event updated successfully.",
   "data": {
     "id": 1,
+    "source_ip": "203.0.113.10",
+    "destination_ip": "198.51.100.5",
+    "threat_type": "DDoS",
     "severity": "critical",
-    "threat_type": "DDoS"
+    "location": "DE",
+    "payload_details": "Suspicious network activity detected."
   }
 }
 ```
@@ -151,7 +171,7 @@ Invalid input returns:
 422 Unprocessable Entity
 ```
 
-Missing event returns:
+If the event does not exist:
 
 ```text
 404 Not Found
@@ -159,7 +179,61 @@ Missing event returns:
 
 ---
 
-## Response Codes
+## Delete Threat Event
+
+### DELETE `/api/threat-events/{id}`
+
+Deletes an existing threat event.
+
+Successful response:
+
+```json
+{
+  "message": "Threat event deleted successfully."
+}
+```
+
+If the event does not exist:
+
+```text
+404 Not Found
+```
+
+---
+
+## Validation
+
+### Create Request
+
+The following fields are validated when creating a threat event:
+
+```text
+source_ip        required, valid IP address
+destination_ip   required, valid IP address
+threat_type      required, string, max 255 characters
+severity         required, low|medium|high|critical
+location         optional, string, max 100 characters
+payload_details  optional, string
+```
+
+### Update Request
+
+Updates support partial request bodies.
+
+Fields are validated only when supplied:
+
+```text
+source_ip        valid IP address
+destination_ip   valid IP address
+threat_type      string, max 255 characters
+severity         low|medium|high|critical
+location         optional string, max 100 characters
+payload_details  optional string
+```
+
+---
+
+## HTTP Response Codes
 
 ```text
 200 OK
@@ -167,4 +241,91 @@ Missing event returns:
 404 Not Found
 422 Unprocessable Entity
 500 Internal Server Error
+```
+
+---
+
+## Example cURL Requests
+
+### Health Check
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+### List Threat Events
+
+```bash
+curl http://127.0.0.1:8000/api/threat-events
+```
+
+### Get Threat Event
+
+```bash
+curl http://127.0.0.1:8000/api/threat-events/1
+```
+
+### Create Threat Event
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/threat-events \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "source_ip": "192.168.1.10",
+    "destination_ip": "10.0.0.5",
+    "threat_type": "SSH Brute Force",
+    "severity": "high",
+    "location": "DE",
+    "payload_details": "Multiple failed login attempts detected."
+  }'
+```
+
+### Update Threat Event
+
+```bash
+curl -X PATCH http://127.0.0.1:8000/api/threat-events/1 \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "severity": "critical",
+    "threat_type": "DDoS"
+  }'
+```
+
+### Delete Threat Event
+
+```bash
+curl -X DELETE http://127.0.0.1:8000/api/threat-events/1 \
+  -H "Accept: application/json"
+```
+
+---
+
+## Current API Coverage
+
+The API currently supports:
+
+```text
+GET     /api/health
+GET     /api/threat-events
+GET     /api/threat-events/{id}
+POST    /api/threat-events
+PATCH   /api/threat-events/{id}
+DELETE  /api/threat-events/{id}
+```
+
+Automated tests cover:
+
+```text
+Health endpoint
+Paginated threat-event listing
+Single threat-event retrieval
+404 handling
+Threat-event creation
+Create validation
+Threat-event updates
+Update validation
+Threat-event deletion
+Delete 404 handling
 ```
