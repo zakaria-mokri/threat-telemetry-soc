@@ -54,6 +54,60 @@ class ThreatEventTest extends TestCase
             ]);
     }
 
+    public function test_api_can_filter_threat_events_by_severity(): void
+    {
+        ThreatEvent::factory()->create([
+            'severity' => 'critical',
+        ]);
+
+        ThreatEvent::factory()->create([
+            'severity' => 'low',
+        ]);
+
+        $response = $this->getJson('/api/threat-events?severity=critical');
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.severity', 'critical');
+    }
+
+    public function test_api_can_filter_threat_events_by_threat_type(): void
+    {
+        ThreatEvent::factory()->create([
+            'threat_type' => 'SSH Brute Force',
+        ]);
+
+        ThreatEvent::factory()->create([
+            'threat_type' => 'DDoS',
+        ]);
+
+        $response = $this->getJson('/api/threat-events?threat_type=SSH');
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.threat_type', 'SSH Brute Force');
+    }
+
+    public function test_api_can_filter_threat_events_by_source_ip(): void
+    {
+        ThreatEvent::factory()->create([
+            'source_ip' => '203.0.113.50',
+        ]);
+
+        ThreatEvent::factory()->create([
+            'source_ip' => '198.51.100.10',
+        ]);
+
+        $response = $this->getJson('/api/threat-events?source_ip=203.0.113.50');
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.source_ip', '203.0.113.50');
+    }
+
     public function test_api_can_return_a_single_threat_event(): void
     {
         $event = ThreatEvent::factory()->create([
@@ -171,30 +225,27 @@ class ThreatEventTest extends TestCase
             ]);
     }
 
+    public function test_api_can_delete_a_threat_event(): void
+    {
+        $event = ThreatEvent::factory()->create();
 
-public function test_api_can_delete_a_threat_event(): void
-{
-    $event = ThreatEvent::factory()->create();
+        $response = $this->deleteJson("/api/threat-events/{$event->id}");
 
-    $response = $this->deleteJson("/api/threat-events/{$event->id}");
+        $response
+            ->assertStatus(200)
+            ->assertJson([
+                'message' => 'Threat event deleted successfully.',
+            ]);
 
-    $response
-        ->assertStatus(200)
-        ->assertJson([
-            'message' => 'Threat event deleted successfully.',
+        $this->assertDatabaseMissing('threat_events', [
+            'id' => $event->id,
         ]);
+    }
 
-    $this->assertDatabaseMissing('threat_events', [
-        'id' => $event->id,
-    ]);
-}
+    public function test_api_returns_404_when_deleting_missing_threat_event(): void
+    {
+        $response = $this->deleteJson('/api/threat-events/999999');
 
-public function test_api_returns_404_when_deleting_missing_threat_event(): void
-{
-    $response = $this->deleteJson('/api/threat-events/999999');
-
-    $response->assertStatus(404);
-}
-
-
+        $response->assertStatus(404);
+    }
 }

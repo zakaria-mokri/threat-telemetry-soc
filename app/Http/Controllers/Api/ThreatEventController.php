@@ -12,7 +12,28 @@ class ThreatEventController extends Controller
 {
     public function index(): JsonResponse
     {
-        $events = ThreatEvent::latest()->paginate(20);
+        $query = ThreatEvent::query();
+
+        if (request()->filled('severity')) {
+            $query->where('severity', request('severity'));
+        }
+
+        if (request()->filled('threat_type')) {
+            $query->where(
+                'threat_type',
+                'like',
+                '%' . request('threat_type') . '%'
+            );
+        }
+
+        if (request()->filled('source_ip')) {
+            $query->where('source_ip', request('source_ip'));
+        }
+
+        $events = $query
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
         return response()->json($events);
     }
