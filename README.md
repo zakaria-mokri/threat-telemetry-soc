@@ -9,6 +9,8 @@
   <img src="https://img.shields.io/badge/PHP-8.4+-777BB4?style=flat&logo=php&logoColor=white" alt="PHP 8.4+">
   <img src="https://img.shields.io/badge/Sanctum-API_Auth-FF2D20?style=flat&logo=laravel&logoColor=white" alt="Laravel Sanctum">
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/OpenAPI-3.0-6BA539?style=flat&logo=openapiinitiative&logoColor=white" alt="OpenAPI">
+  <img src="https://img.shields.io/badge/Render-Live-46E3B7?style=flat&logo=render&logoColor=black" alt="Render">
   <img src="https://img.shields.io/badge/Reverb-WebSockets-4A154B?style=flat&logo=laravel&logoColor=white" alt="Laravel Reverb">
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
 </p>
@@ -19,7 +21,21 @@
 
 A Laravel-based Security Operations Center dashboard and REST API for collecting, storing, filtering, managing, and visualizing simulated threat telemetry.
 
-The project demonstrates backend engineering, API security, automated testing, continuous integration, containerization, real-time application architecture, and modern Laravel development practices.
+The project demonstrates backend engineering, API security, automated testing, continuous integration, Docker containerization, OpenAPI documentation, real-time application architecture, and production deployment.
+
+---
+
+## Live Demo
+
+**Application**
+
+https://threat-telemetry-soc.onrender.com
+
+**API Health**
+
+https://threat-telemetry-soc.onrender.com/api/health
+
+> The public demo runs on Render's free tier. After a period of inactivity, the service may need a short time to wake up on the first request.
 
 ---
 
@@ -29,21 +45,25 @@ Threat Telemetry SOC simulates a lightweight Security Operations Center environm
 
 Security events such as brute-force attempts, SQL injection attempts, DDoS activity, XSS attacks, and port scans can be persisted in the database, queried through a REST API, filtered by security attributes, and displayed through a monitoring dashboard.
 
-The application currently includes:
+The project currently includes:
 
 - Persistent threat-event storage
 - SOC monitoring dashboard
 - Full CRUD REST API
 - Laravel Sanctum API protection
-- Request validation with Form Requests
+- Public read endpoints
+- Protected write endpoints
+- Request validation with Laravel Form Requests
 - Threat-event filtering
 - API pagination
-- Automated feature tests
+- Automated PHPUnit feature tests
 - API health monitoring
 - Laravel Reverb real-time communication tooling
 - GitHub Actions continuous integration
 - Dockerized application environment
-- Dedicated API documentation
+- OpenAPI 3 specification
+- Dedicated API reference
+- Public Render deployment
 
 ---
 
@@ -93,11 +113,13 @@ XSS
 Port Scan
 ```
 
+---
+
 ### API Security
 
-Read endpoints remain publicly accessible.
+Read operations remain publicly accessible.
 
-Write operations are protected using Laravel Sanctum:
+Write operations are protected with Laravel Sanctum:
 
 ```text
 POST
@@ -111,7 +133,9 @@ Unauthenticated write requests receive:
 401 Unauthorized
 ```
 
-This keeps threat telemetry readable while preventing unauthorized mutation of stored security events.
+This allows public access to telemetry while preventing unauthorized modification of stored threat events.
+
+---
 
 ### Filtering
 
@@ -130,6 +154,8 @@ GET /api/threat-events?severity=critical
 GET /api/threat-events?threat_type=SSH
 GET /api/threat-events?source_ip=203.0.113.50
 ```
+
+Filtering works together with the paginated API response.
 
 ---
 
@@ -329,7 +355,7 @@ PATCH   /api/threat-events/{id}
 DELETE  /api/threat-events/{id}
 ```
 
-Public:
+Public endpoints:
 
 ```text
 GET /api/health
@@ -337,7 +363,7 @@ GET /api/threat-events
 GET /api/threat-events/{id}
 ```
 
-Protected with Sanctum:
+Sanctum-protected endpoints:
 
 ```text
 POST   /api/threat-events
@@ -345,11 +371,51 @@ PATCH  /api/threat-events/{id}
 DELETE /api/threat-events/{id}
 ```
 
-Full API reference:
+Detailed API reference:
 
 ```text
 docs/api.md
 ```
+
+OpenAPI specification:
+
+```text
+docs/openapi.yaml
+```
+
+---
+
+## OpenAPI
+
+The repository includes an OpenAPI 3.0 specification describing the REST API.
+
+File:
+
+```text
+docs/openapi.yaml
+```
+
+The specification documents:
+
+- Health endpoint
+- Threat-event listing
+- Query filters
+- Threat-event retrieval
+- Threat-event creation
+- Threat-event updates
+- Threat-event deletion
+- Bearer-token authentication
+- Request schemas
+- Response schemas
+- HTTP status codes
+
+The specification can be imported into tools such as:
+
+- Swagger Editor
+- Swagger UI
+- Postman
+- Insomnia
+- Stoplight
 
 ---
 
@@ -381,7 +447,7 @@ location         optional string, max 100
 payload_details  optional string
 ```
 
-Invalid API input receives structured JSON validation errors with:
+Invalid API input receives structured JSON validation errors:
 
 ```http
 422 Unprocessable Entity
@@ -396,14 +462,16 @@ Laravel Sanctum provides API authentication for write operations.
 The `User` model uses:
 
 ```php
-Laravel\Sanctum\HasApiTokens
+use Laravel\Sanctum\HasApiTokens;
 ```
 
 Protected routes use:
 
 ```php
 Route::middleware('auth:sanctum')->group(function () {
-    // protected write endpoints
+    Route::post('/threat-events', [ThreatEventController::class, 'store']);
+    Route::patch('/threat-events/{threatEvent}', [ThreatEventController::class, 'update']);
+    Route::delete('/threat-events/{threatEvent}', [ThreatEventController::class, 'destroy']);
 });
 ```
 
@@ -422,7 +490,7 @@ Current test suite:
 82 assertions
 ```
 
-Coverage currently includes:
+Coverage includes:
 
 - Application availability
 - Health endpoint
@@ -441,13 +509,13 @@ Coverage currently includes:
 - Authenticated threat-event deletion
 - Missing delete target handling
 
-Run all tests:
+Run the full test suite:
 
 ```bash
 php artisan test
 ```
 
-Example result:
+Current result:
 
 ```text
 Tests: 17 passed (82 assertions)
@@ -485,7 +553,7 @@ Workflow:
 .github/workflows/tests.yml
 ```
 
-The workflow currently runs on PHP 8.4 because the installed Symfony 8 dependencies require PHP 8.4.1 or newer.
+The workflow uses PHP 8.4 because the installed Symfony 8 dependencies require PHP 8.4.1 or newer.
 
 ---
 
@@ -504,6 +572,8 @@ SQLite PHP extensions
 Laravel dependencies
 Frontend production build
 Laravel application server
+Automatic production migrations
+Dynamic hosting port support
 ```
 
 ### Build the Image
@@ -539,7 +609,47 @@ Expected response:
 }
 ```
 
-The Docker image has been successfully built and the health endpoint verified from a running container.
+The Docker image has been successfully built and verified using a running container.
+
+---
+
+## Deployment
+
+The application is deployed publicly on Render using the repository's Docker configuration.
+
+Live application:
+
+```text
+https://threat-telemetry-soc.onrender.com
+```
+
+Health endpoint:
+
+```text
+https://threat-telemetry-soc.onrender.com/api/health
+```
+
+The production container:
+
+1. Starts from PHP 8.4
+2. Installs Composer and frontend dependencies
+3. Builds production frontend assets
+4. Creates the SQLite database if required
+5. Runs Laravel migrations with `--force`
+6. Starts Laravel on the hosting platform's dynamic `$PORT`
+
+The application is configured with production environment variables such as:
+
+```text
+APP_ENV=production
+APP_DEBUG=false
+LOG_CHANNEL=stderr
+DB_CONNECTION=sqlite
+```
+
+Sensitive values such as `APP_KEY` are configured through Render environment variables and are not committed to the repository.
+
+> Render's free tier may spin the service down after inactivity. The first request after inactivity can therefore take longer than normal.
 
 ---
 
@@ -575,10 +685,12 @@ The Docker image has been successfully built and the health endpoint verified fr
 ### DevOps & Tooling
 
 - Docker
+- GitHub Actions
+- Render
+- OpenAPI 3
 - Composer
 - NPM
 - Git
-- GitHub Actions
 - Laravel Pint
 - Laravel Pail
 
@@ -642,6 +754,30 @@ Database
 JSON Response
 ```
 
+Deployment flow:
+
+```text
+GitHub Repository
+       |
+       v
+GitHub Actions CI
+       |
+       v
+Render
+       |
+       v
+Docker Build
+       |
+       v
+Laravel Migrations
+       |
+       v
+Laravel Application
+       |
+       v
+Public HTTPS URL
+```
+
 ---
 
 ## Project Structure
@@ -671,7 +807,8 @@ database/
     └── create_personal_access_tokens_table.php
 
 docs/
-└── api.md
+├── api.md
+└── openapi.yaml
 
 routes/
 ├── api.php
@@ -697,7 +834,7 @@ Dockerfile
 
 ## Local Development
 
-### 1. Clone
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/zakaria-mokri/threat-telemetry-soc.git
@@ -741,7 +878,7 @@ DB_CONNECTION=sqlite
 php artisan migrate
 ```
 
-This creates the application tables including Sanctum personal access tokens.
+This creates the application tables, including Sanctum's personal access token table.
 
 ### 7. Build Frontend
 
@@ -749,7 +886,7 @@ This creates the application tables including Sanctum personal access tokens.
 npm run build
 ```
 
-For development:
+For frontend development:
 
 ```bash
 npm run dev
@@ -796,7 +933,7 @@ Country codes
 Payload descriptions
 ```
 
-Open Tinker:
+Open Laravel Tinker:
 
 ```bash
 php artisan tinker
@@ -825,7 +962,7 @@ App\Models\ThreatEvent::factory()->count(20)->create();
 - Form Request validation
 - Laravel Sanctum integration
 - Protected write endpoints
-- Authentication regression test
+- Authentication regression testing
 - PHPUnit feature tests
 - 17 passing automated tests
 - 82 assertions
@@ -833,15 +970,21 @@ App\Models\ThreatEvent::factory()->count(20)->create();
 - Production frontend build verification
 - Docker image
 - Docker runtime verification
+- Render-compatible Docker startup
 - API documentation
+- OpenAPI 3 specification
+- Public Render deployment
+- Live health endpoint
 - Meaningful incremental Git history
 
-### Remaining
+### Optional Future Improvements
 
-- OpenAPI / Swagger specification
-- Public deployed demo
-- Optional role-based authorization
+- Role-based authorization
 - Additional security-focused edge-case tests
+- Persistent managed production database
+- Interactive hosted Swagger UI
+- Rate limiting
+- Additional telemetry analytics
 
 ---
 
@@ -860,22 +1003,39 @@ It demonstrates:
 - Continuous integration
 - Containerized environments
 - Reproducible builds
-- API documentation
+- OpenAPI documentation
+- Production deployment
+- Environment-based configuration
 - Incremental Git commits
 - Clear separation of public and protected API operations
 
 ---
 
-## Roadmap
+## Portfolio Highlights
 
-Next milestones:
+This project demonstrates an end-to-end software engineering workflow:
 
 ```text
-1. OpenAPI / Swagger documentation
-2. Public demo deployment
-3. Optional role-based authorization
-4. Additional API security tests
+Application Development
+        +
+REST API Design
+        +
+Validation
+        +
+Authentication
+        +
+Automated Testing
+        +
+Continuous Integration
+        +
+Docker
+        +
+OpenAPI Documentation
+        +
+Cloud Deployment
 ```
+
+Rather than being only a local prototype, the application is tested, containerized, documented, continuously validated, and publicly deployed.
 
 ---
 
