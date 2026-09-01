@@ -25,20 +25,6 @@ The project demonstrates backend engineering, API security, automated testing, c
 
 ---
 
-## Live Demo
-
-**Application**
-
-https://threat-telemetry-soc.onrender.com
-
-**API Health**
-
-https://threat-telemetry-soc.onrender.com/api/health
-
-> The public demo runs on Render's free tier. After a period of inactivity, the service may need a short time to wake up on the first request.
-
----
-
 ## Overview
 
 Threat Telemetry SOC simulates a lightweight Security Operations Center environment.
