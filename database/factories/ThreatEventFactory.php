@@ -18,7 +18,23 @@ class ThreatEventFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'source_ip' => fake()->ipv4(),
+            'destination_ip' => fake()->ipv4(),
+            'threat_type' => fake()->randomElement([
+                'SSH Brute Force',
+                'SQL Injection',
+                'DDoS',
+                'XSS',
+                'Port Scan',
+            ]),
+            'severity' => fake()->randomElement([
+                'low',
+                'medium',
+                'high',
+                'critical',
+            ]),
+            'location' => fake()->countryCode(),
+            'payload_details' => fake()->sentence(),
         ];
     }
 }
