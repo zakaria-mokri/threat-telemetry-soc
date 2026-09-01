@@ -53,4 +53,52 @@ class ThreatEventTest extends TestCase
                 'total',
             ]);
     }
+
+    public function test_api_can_create_a_threat_event(): void
+    {
+        $payload = [
+            'source_ip' => '192.168.1.10',
+            'destination_ip' => '10.0.0.5',
+            'threat_type' => 'SSH Brute Force',
+            'severity' => 'high',
+            'location' => 'DE',
+            'payload_details' => 'Multiple failed login attempts detected.',
+        ];
+
+        $response = $this->postJson('/api/threat-events', $payload);
+
+        $response
+            ->assertStatus(201)
+            ->assertJson([
+                'message' => 'Threat event created successfully.',
+            ])
+            ->assertJsonPath('data.source_ip', '192.168.1.10')
+            ->assertJsonPath('data.severity', 'high');
+
+        $this->assertDatabaseHas('threat_events', [
+            'source_ip' => '192.168.1.10',
+            'destination_ip' => '10.0.0.5',
+            'threat_type' => 'SSH Brute Force',
+            'severity' => 'high',
+        ]);
+    }
+
+    public function test_api_rejects_invalid_threat_event_data(): void
+    {
+        $response = $this->postJson('/api/threat-events', [
+            'source_ip' => 'not-an-ip',
+            'destination_ip' => '',
+            'threat_type' => '',
+            'severity' => 'extreme',
+        ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors([
+                'source_ip',
+                'destination_ip',
+                'threat_type',
+                'severity',
+            ]);
+    }
 }

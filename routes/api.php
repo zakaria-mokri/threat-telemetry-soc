@@ -11,3 +11,4 @@ Route::get('/health', function () {
 });
 
 Route::get('/threat-events', [ThreatEventController::class, 'index']);
+Route::post('/threat-events', [ThreatEventController::class, 'store']);
