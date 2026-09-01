@@ -1,0 +1,364 @@
+openapi: 3.0.3
+
+info:
+  title: Threat Telemetry SOC API
+  version: 1.0.0
+  description: >
+    REST API for querying and managing threat telemetry events.
+    Read operations are public. Create, update, and delete operations
+    require Laravel Sanctum authentication.
+
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development server
+
+tags:
+  - name: Health
+  - name: Threat Events
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Check API health
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: threat-telemetry-soc
+
+  /api/threat-events:
+    get:
+      tags:
+        - Threat Events
+      summary: List threat events
+      operationId: listThreatEvents
+      parameters:
+        - name: severity
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - low
+              - medium
+              - high
+              - critical
+
+        - name: threat_type
+          in: query
+          required: false
+          schema:
+            type: string
+          example: SSH
+
+        - name: source_ip
+          in: query
+          required: false
+          schema:
+            type: string
+            format: ipv4
+          example: 203.0.113.50
+
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+
+      responses:
+        '200':
+          description: Paginated threat-event list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatEventCollection'
+
+    post:
+      tags:
+        - Threat Events
+      summary: Create a threat event
+      operationId: createThreatEvent
+      security:
+        - sanctum: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreThreatEvent'
+      responses:
+        '201':
+          description: Threat event created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Threat event created successfully.
+                  data:
+                    $ref: '#/components/schemas/ThreatEvent'
+
+        '401':
+          description: Unauthenticated
+
+        '422':
+          description: Validation failed
+
+  /api/threat-events/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+
+    get:
+      tags:
+        - Threat Events
+      summary: Get one threat event
+      operationId: getThreatEvent
+      responses:
+        '200':
+          description: Threat event found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ThreatEvent'
+
+        '404':
+          description: Threat event not found
+
+    patch:
+      tags:
+        - Threat Events
+      summary: Update a threat event
+      operationId: updateThreatEvent
+      security:
+        - sanctum: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateThreatEvent'
+      responses:
+        '200':
+          description: Threat event updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Threat event updated successfully.
+                  data:
+                    $ref: '#/components/schemas/ThreatEvent'
+
+        '401':
+          description: Unauthenticated
+
+        '404':
+          description: Threat event not found
+
+        '422':
+          description: Validation failed
+
+    delete:
+      tags:
+        - Threat Events
+      summary: Delete a threat event
+      operationId: deleteThreatEvent
+      security:
+        - sanctum: []
+      responses:
+        '200':
+          description: Threat event deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Threat event deleted successfully.
+
+        '401':
+          description: Unauthenticated
+
+        '404':
+          description: Threat event not found
+
+components:
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+
+  schemas:
+    ThreatEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+
+        source_ip:
+          type: string
+          format: ipv4
+          example: 192.168.1.10
+
+        destination_ip:
+          type: string
+          format: ipv4
+          example: 10.0.0.5
+
+        threat_type:
+          type: string
+          example: SSH Brute Force
+
+        severity:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+          example: high
+
+        location:
+          type: string
+          nullable: true
+          example: DE
+
+        payload_details:
+          type: string
+          nullable: true
+          example: Multiple failed login attempts detected.
+
+        created_at:
+          type: string
+          format: date-time
+
+        updated_at:
+          type: string
+          format: date-time
+
+    StoreThreatEvent:
+      type: object
+      required:
+        - source_ip
+        - destination_ip
+        - threat_type
+        - severity
+      properties:
+        source_ip:
+          type: string
+          format: ipv4
+          example: 192.168.1.10
+
+        destination_ip:
+          type: string
+          format: ipv4
+          example: 10.0.0.5
+
+        threat_type:
+          type: string
+          maxLength: 255
+          example: SSH Brute Force
+
+        severity:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+          example: high
+
+        location:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: DE
+
+        payload_details:
+          type: string
+          nullable: true
+          example: Multiple failed login attempts detected.
+
+    UpdateThreatEvent:
+      type: object
+      properties:
+        source_ip:
+          type: string
+          format: ipv4
+
+        destination_ip:
+          type: string
+          format: ipv4
+
+        threat_type:
+          type: string
+          maxLength: 255
+
+        severity:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+
+        location:
+          type: string
+          nullable: true
+          maxLength: 100
+
+        payload_details:
+          type: string
+          nullable: true
+
+    ThreatEventCollection:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreatEvent'
+
+        last_page:
+          type: integer
+          example: 1
+
+        per_page:
+          type: integer
+          example: 20
+
+        total:
+          type: integer
+          example: 3
