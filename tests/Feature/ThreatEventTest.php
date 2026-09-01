@@ -54,6 +54,31 @@ class ThreatEventTest extends TestCase
             ]);
     }
 
+    public function test_api_can_return_a_single_threat_event(): void
+    {
+        $event = ThreatEvent::factory()->create([
+            'source_ip' => '203.0.113.10',
+            'threat_type' => 'Port Scan',
+            'severity' => 'medium',
+        ]);
+
+        $response = $this->getJson("/api/threat-events/{$event->id}");
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $event->id)
+            ->assertJsonPath('data.source_ip', '203.0.113.10')
+            ->assertJsonPath('data.threat_type', 'Port Scan')
+            ->assertJsonPath('data.severity', 'medium');
+    }
+
+    public function test_api_returns_404_for_missing_threat_event(): void
+    {
+        $response = $this->getJson('/api/threat-events/999999');
+
+        $response->assertStatus(404);
+    }
+
     public function test_api_can_create_a_threat_event(): void
     {
         $payload = [
@@ -98,6 +123,50 @@ class ThreatEventTest extends TestCase
                 'source_ip',
                 'destination_ip',
                 'threat_type',
+                'severity',
+            ]);
+    }
+
+    public function test_api_can_update_a_threat_event(): void
+    {
+        $event = ThreatEvent::factory()->create([
+            'severity' => 'low',
+            'threat_type' => 'Port Scan',
+        ]);
+
+        $response = $this->patchJson("/api/threat-events/{$event->id}", [
+            'severity' => 'critical',
+            'threat_type' => 'DDoS',
+        ]);
+
+        $response
+            ->assertStatus(200)
+            ->assertJson([
+                'message' => 'Threat event updated successfully.',
+            ])
+            ->assertJsonPath('data.severity', 'critical')
+            ->assertJsonPath('data.threat_type', 'DDoS');
+
+        $this->assertDatabaseHas('threat_events', [
+            'id' => $event->id,
+            'severity' => 'critical',
+            'threat_type' => 'DDoS',
+        ]);
+    }
+
+    public function test_api_rejects_invalid_update_data(): void
+    {
+        $event = ThreatEvent::factory()->create();
+
+        $response = $this->patchJson("/api/threat-events/{$event->id}", [
+            'source_ip' => 'invalid-ip',
+            'severity' => 'extreme',
+        ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors([
+                'source_ip',
                 'severity',
             ]);
     }
