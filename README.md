@@ -10,7 +10,6 @@
   <img src="https://img.shields.io/badge/Sanctum-API_Auth-FF2D20?style=flat&logo=laravel&logoColor=white" alt="Laravel Sanctum">
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/OpenAPI-3.0-6BA539?style=flat&logo=openapiinitiative&logoColor=white" alt="OpenAPI">
-  <img src="https://img.shields.io/badge/Render-Live-46E3B7?style=flat&logo=render&logoColor=black" alt="Render">
   <img src="https://img.shields.io/badge/Reverb-WebSockets-4A154B?style=flat&logo=laravel&logoColor=white" alt="Laravel Reverb">
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
 </p>
@@ -19,9 +18,9 @@
 
 ![Tests](https://github.com/zakaria-mokri/threat-telemetry-soc/actions/workflows/tests.yml/badge.svg)
 
-A Laravel-based Security Operations Center dashboard and REST API for collecting, storing, filtering, managing, and visualizing simulated threat telemetry.
+A Laravel-based Security Operations Center dashboard and REST API for collecting, storing, filtering, managing, and visualizing simulated cyber-threat telemetry.
 
-The project demonstrates backend engineering, API security, automated testing, continuous integration, Docker containerization, OpenAPI documentation, real-time application architecture, and production deployment.
+The project demonstrates backend engineering, REST API design, authentication, automated testing, continuous integration, Docker containerization, OpenAPI documentation, and real-time WebSocket communication.
 
 ---
 
@@ -29,12 +28,15 @@ The project demonstrates backend engineering, API security, automated testing, c
 
 Threat Telemetry SOC simulates a lightweight Security Operations Center environment.
 
-Security events such as brute-force attempts, SQL injection attempts, DDoS activity, XSS attacks, and port scans can be persisted in the database, queried through a REST API, filtered by security attributes, and displayed through a monitoring dashboard.
+Security events such as brute-force attempts, SQL injection attempts, DDoS activity, XSS attacks, and port scans are generated, persisted in the database, exposed through a REST API, and displayed through a live monitoring dashboard.
 
-The project currently includes:
+The project includes:
 
 - Persistent threat-event storage
-- SOC monitoring dashboard
+- Real-time SOC monitoring dashboard
+- Live telemetry simulator
+- Laravel Reverb WebSocket broadcasting
+- Laravel Echo browser subscriptions
 - Full CRUD REST API
 - Laravel Sanctum API protection
 - Public read endpoints
@@ -44,12 +46,10 @@ The project currently includes:
 - API pagination
 - Automated PHPUnit feature tests
 - API health monitoring
-- Laravel Reverb real-time communication tooling
 - GitHub Actions continuous integration
-- Dockerized application environment
+- Docker support
 - OpenAPI 3 specification
-- Dedicated API reference
-- Public Render deployment
+- Dedicated API documentation
 
 ---
 
@@ -65,9 +65,71 @@ The project currently includes:
 
 ---
 
-## Key Features
+## Real-Time Telemetry
 
-### Threat Event Management
+The dashboard receives simulated security events in real time through Laravel Reverb.
+
+The telemetry flow is:
+
+```text
+Telemetry Simulator
+        |
+        v
+ThreatEvent Model
+        |
+        v
+SQLite Database
+        |
+        v
+ThreatDetected Event
+        |
+        v
+Laravel Reverb
+        |
+        v
+Laravel Echo
+        |
+        v
+Browser Dashboard
+```
+
+A new simulated threat event can be generated every two seconds.
+
+Each event:
+
+- receives a randomized source IP
+- receives a threat type
+- receives a severity level
+- receives a geographic source location
+- is persisted to SQLite
+- is broadcast through Laravel Reverb
+- is received by Laravel Echo
+- updates the live telemetry feed
+- updates dashboard statistics
+- appears on the global threat map
+
+---
+
+## Threat Event Types
+
+Example simulated threats include:
+
+```text
+SSH Brute Force
+SQL Injection
+DDoS Vector
+XSS Payload
+Port Scan
+```
+
+Supported severity levels:
+
+```text
+low
+medium
+high
+critical
+```
 
 Threat events contain:
 
@@ -79,69 +141,6 @@ Threat events contain:
 - Payload details
 - Creation timestamp
 - Update timestamp
-
-Supported severity levels:
-
-```text
-low
-medium
-high
-critical
-```
-
-Example threat types:
-
-```text
-SSH Brute Force
-SQL Injection
-DDoS
-XSS
-Port Scan
-```
-
----
-
-### API Security
-
-Read operations remain publicly accessible.
-
-Write operations are protected with Laravel Sanctum:
-
-```text
-POST
-PATCH
-DELETE
-```
-
-Unauthenticated write requests receive:
-
-```http
-401 Unauthorized
-```
-
-This allows public access to telemetry while preventing unauthorized modification of stored threat events.
-
----
-
-### Filtering
-
-Threat events can be filtered by:
-
-```text
-severity
-threat_type
-source_ip
-```
-
-Examples:
-
-```http
-GET /api/threat-events?severity=critical
-GET /api/threat-events?threat_type=SSH
-GET /api/threat-events?source_ip=203.0.113.50
-```
-
-Filtering works together with the paginated API response.
 
 ---
 
@@ -184,7 +183,7 @@ Default pagination:
 20 events per page
 ```
 
-Optional filters:
+Supported filters:
 
 ```text
 severity
@@ -192,10 +191,12 @@ threat_type
 source_ip
 ```
 
-Example:
+Examples:
 
 ```http
 GET /api/threat-events?severity=critical
+GET /api/threat-events?threat_type=SSH
+GET /api/threat-events?source_ip=203.0.113.50
 ```
 
 ---
@@ -205,8 +206,6 @@ GET /api/threat-events?severity=critical
 ```http
 GET /api/threat-events/{id}
 ```
-
-Returns one threat event.
 
 Missing records return:
 
@@ -243,32 +242,16 @@ Successful response:
 201 Created
 ```
 
-Example:
-
-```json
-{
-  "message": "Threat event created successfully.",
-  "data": {
-    "source_ip": "192.168.1.10",
-    "destination_ip": "10.0.0.5",
-    "threat_type": "SSH Brute Force",
-    "severity": "high",
-    "location": "DE",
-    "payload_details": "Multiple failed login attempts detected."
-  }
-}
-```
-
-Invalid input returns:
-
-```http
-422 Unprocessable Entity
-```
-
 Unauthenticated requests return:
 
 ```http
 401 Unauthorized
+```
+
+Invalid requests return:
+
+```http
+422 Unprocessable Entity
 ```
 
 ---
@@ -292,18 +275,6 @@ Example:
 }
 ```
 
-Successful response:
-
-```json
-{
-  "message": "Threat event updated successfully.",
-  "data": {
-    "severity": "critical",
-    "threat_type": "DDoS"
-  }
-}
-```
-
 ---
 
 ### Delete Threat Event
@@ -312,14 +283,6 @@ Authentication required.
 
 ```http
 DELETE /api/threat-events/{id}
-```
-
-Successful response:
-
-```json
-{
-  "message": "Threat event deleted successfully."
-}
 ```
 
 Missing records return:
@@ -357,7 +320,7 @@ PATCH  /api/threat-events/{id}
 DELETE /api/threat-events/{id}
 ```
 
-Detailed API reference:
+Detailed API documentation:
 
 ```text
 docs/api.md
@@ -371,37 +334,35 @@ docs/openapi.yaml
 
 ---
 
-## OpenAPI
+## API Security
 
-The repository includes an OpenAPI 3.0 specification describing the REST API.
+Read operations remain publicly accessible.
 
-File:
+Write operations are protected using Laravel Sanctum:
 
 ```text
-docs/openapi.yaml
+POST
+PATCH
+DELETE
 ```
 
-The specification documents:
+Protected routes use Laravel's:
 
-- Health endpoint
-- Threat-event listing
-- Query filters
-- Threat-event retrieval
-- Threat-event creation
-- Threat-event updates
-- Threat-event deletion
-- Bearer-token authentication
-- Request schemas
-- Response schemas
-- HTTP status codes
+```php
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/threat-events', [ThreatEventController::class, 'store']);
+    Route::patch('/threat-events/{threatEvent}', [ThreatEventController::class, 'update']);
+    Route::delete('/threat-events/{threatEvent}', [ThreatEventController::class, 'destroy']);
+});
+```
 
-The specification can be imported into tools such as:
+Unauthenticated write requests receive:
 
-- Swagger Editor
-- Swagger UI
-- Postman
-- Insomnia
-- Stoplight
+```http
+401 Unauthorized
+```
+
+This keeps telemetry readable while preventing unauthorized modification.
 
 ---
 
@@ -433,7 +394,7 @@ location         optional string, max 100
 payload_details  optional string
 ```
 
-Invalid API input receives structured JSON validation errors:
+Invalid API input receives:
 
 ```http
 422 Unprocessable Entity
@@ -441,27 +402,37 @@ Invalid API input receives structured JSON validation errors:
 
 ---
 
-## Authentication
+## OpenAPI
 
-Laravel Sanctum provides API authentication for write operations.
+The repository includes an OpenAPI 3.0 specification describing the REST API.
 
-The `User` model uses:
+File:
 
-```php
-use Laravel\Sanctum\HasApiTokens;
+```text
+docs/openapi.yaml
 ```
 
-Protected routes use:
+The specification documents:
 
-```php
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/threat-events', [ThreatEventController::class, 'store']);
-    Route::patch('/threat-events/{threatEvent}', [ThreatEventController::class, 'update']);
-    Route::delete('/threat-events/{threatEvent}', [ThreatEventController::class, 'destroy']);
-});
-```
+- Health endpoint
+- Threat-event listing
+- Query filters
+- Threat-event retrieval
+- Threat-event creation
+- Threat-event updates
+- Threat-event deletion
+- Bearer-token authentication
+- Request schemas
+- Response schemas
+- HTTP status codes
 
-This prevents unauthenticated clients from creating, modifying, or deleting threat telemetry.
+It can be imported into tools such as:
+
+- Swagger Editor
+- Swagger UI
+- Postman
+- Insomnia
+- Stoplight
 
 ---
 
@@ -513,7 +484,7 @@ The test suite uses Laravel's `RefreshDatabase` functionality to isolate databas
 
 ## Continuous Integration
 
-GitHub Actions automatically validates the project on:
+GitHub Actions validates the project automatically on:
 
 ```text
 Pushes to main
@@ -539,103 +510,7 @@ Workflow:
 .github/workflows/tests.yml
 ```
 
-The workflow uses PHP 8.4 because the installed Symfony 8 dependencies require PHP 8.4.1 or newer.
-
----
-
-## Docker
-
-The application includes a tested Docker configuration.
-
-Docker support includes:
-
-```text
-PHP 8.4
-Composer
-Node.js
-NPM
-SQLite PHP extensions
-Laravel dependencies
-Frontend production build
-Laravel application server
-Automatic production migrations
-Dynamic hosting port support
-```
-
-### Build the Image
-
-```bash
-docker build -t threat-telemetry-soc .
-```
-
-### Run the Container
-
-```bash
-docker run --rm -p 8000:8000 threat-telemetry-soc
-```
-
-The application becomes available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-Verify the containerized API:
-
-```bash
-curl http://127.0.0.1:8000/api/health
-```
-
-Expected response:
-
-```json
-{
-  "status": "ok",
-  "service": "threat-telemetry-soc"
-}
-```
-
-The Docker image has been successfully built and verified using a running container.
-
----
-
-## Deployment
-
-The application is deployed publicly on Render using the repository's Docker configuration.
-
-Live application:
-
-```text
-https://threat-telemetry-soc.onrender.com
-```
-
-Health endpoint:
-
-```text
-https://threat-telemetry-soc.onrender.com/api/health
-```
-
-The production container:
-
-1. Starts from PHP 8.4
-2. Installs Composer and frontend dependencies
-3. Builds production frontend assets
-4. Creates the SQLite database if required
-5. Runs Laravel migrations with `--force`
-6. Starts Laravel on the hosting platform's dynamic `$PORT`
-
-The application is configured with production environment variables such as:
-
-```text
-APP_ENV=production
-APP_DEBUG=false
-LOG_CHANNEL=stderr
-DB_CONNECTION=sqlite
-```
-
-Sensitive values such as `APP_KEY` are configured through Render environment variables and are not committed to the repository.
-
-> Render's free tier may spin the service down after inactivity. The first request after inactivity can therefore take longer than normal.
+The project uses PHP 8.4 because its installed Symfony dependencies require PHP 8.4.1 or newer.
 
 ---
 
@@ -660,6 +535,7 @@ Sensitive values such as `APP_KEY` are configured through Render environment var
 - Vite 8
 - Laravel Echo
 - Pusher JS
+- Leaflet
 
 ### Data & Testing
 
@@ -672,7 +548,6 @@ Sensitive values such as `APP_KEY` are configured through Render environment var
 
 - Docker
 - GitHub Actions
-- Render
 - OpenAPI 3
 - Composer
 - NPM
@@ -684,7 +559,7 @@ Sensitive values such as `APP_KEY` are configured through Render environment var
 
 ## Architecture
 
-Simplified application flow:
+### API Flow
 
 ```text
 Client
@@ -694,7 +569,7 @@ Laravel Routes
   |
   +---- Public GET Endpoints
   |
-  +---- Sanctum Protected Write Endpoints
+  +---- Sanctum-Protected Write Endpoints
   |
   v
 Form Request Validation
@@ -706,13 +581,13 @@ ThreatEventController
 ThreatEvent Model
   |
   v
-Database
+SQLite Database
   |
   v
 JSON Response
 ```
 
-Protected write flow:
+### Protected Write Flow
 
 ```text
 HTTP Request
@@ -740,28 +615,33 @@ Database
 JSON Response
 ```
 
-Deployment flow:
+### Real-Time Flow
 
 ```text
-GitHub Repository
-       |
-       v
-GitHub Actions CI
-       |
-       v
-Render
-       |
-       v
-Docker Build
-       |
-       v
-Laravel Migrations
-       |
-       v
-Laravel Application
-       |
-       v
-Public HTTPS URL
+telemetry:stream
+      |
+      v
+ThreatEvent
+      |
+      v
+ThreatDetected Event
+      |
+      v
+Laravel Broadcasting
+      |
+      v
+Laravel Reverb
+      |
+      v
+Laravel Echo
+      |
+      v
+Alpine.js Dashboard
+      |
+      +---- Live Feed
+      +---- Severity Metrics
+      +---- Threat Score
+      +---- Attack Map
 ```
 
 ---
@@ -770,44 +650,55 @@ Public HTTPS URL
 
 ```text
 app/
+├── Console/
+│   └── Commands/
+│       └── StreamThreatTelemetry.php
+├── Events/
+│   └── ThreatDetected.php
 ├── Http/
 │   ├── Controllers/
-│   │   └── Api/
-│   │       └── ThreatEventController.php
+│   │   ├── Api/
+│   │   │   └── ThreatEventController.php
+│   │   └── DashboardController.php
 │   └── Requests/
 │       ├── StoreThreatEventRequest.php
 │       └── UpdateThreatEventRequest.php
+├── Models/
+│   ├── ThreatEvent.php
+│   └── User.php
 │
-└── Models/
-    ├── ThreatEvent.php
-    └── User.php
-
 config/
+├── broadcasting.php
+├── reverb.php
 └── sanctum.php
-
+│
 database/
 ├── factories/
 │   └── ThreatEventFactory.php
-└── migrations/
-    ├── create_threat_events_table.php
-    └── create_personal_access_tokens_table.php
-
+├── migrations/
+└── seeders/
+    └── DatabaseSeeder.php
+│
 docs/
 ├── api.md
 └── openapi.yaml
-
+│
+resources/
+├── js/
+│   ├── app.js
+│   └── echo.js
+└── views/
+    └── dashboard.blade.php
+│
 routes/
 ├── api.php
-├── web.php
-└── channels.php
-
+├── channels.php
+└── web.php
+│
 tests/
 ├── Feature/
-│   ├── ExampleTest.php
-│   ├── HealthApiTest.php
-│   └── ThreatEventTest.php
 └── Unit/
-
+│
 .github/
 └── workflows/
     └── tests.yml
@@ -818,47 +709,66 @@ Dockerfile
 
 ---
 
-## Local Development
+# Local Development
 
-### 1. Clone the Repository
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/zakaria-mokri/threat-telemetry-soc.git
 cd threat-telemetry-soc
 ```
 
-### 2. Install PHP Dependencies
+---
+
+## 2. Install PHP Dependencies
 
 ```bash
 composer install
 ```
 
-### 3. Install Frontend Dependencies
+---
+
+## 3. Install Frontend Dependencies
 
 ```bash
 npm install
 ```
 
-### 4. Configure Environment
+---
+
+## 4. Configure Environment
+
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
+```
+
+Generate the Laravel application key:
+
+```bash
 php artisan key:generate
 ```
 
-### 5. Configure SQLite
+---
+
+## 5. Configure SQLite
+
+Create the SQLite database:
 
 ```bash
 touch database/database.sqlite
 ```
 
-Set:
+Ensure the environment uses SQLite:
 
 ```env
 DB_CONNECTION=sqlite
 ```
 
-### 6. Run Migrations
+---
+
+## 6. Run Migrations
 
 ```bash
 php artisan migrate
@@ -866,7 +776,11 @@ php artisan migrate
 
 This creates the application tables, including Sanctum's personal access token table.
 
-### 7. Build Frontend
+---
+
+## 7. Build Frontend Assets
+
+For a production-style build:
 
 ```bash
 npm run build
@@ -878,16 +792,62 @@ For frontend development:
 npm run dev
 ```
 
-### 8. Start Laravel
+---
+
+## 8. Start the Real-Time SOC Dashboard
+
+The full real-time dashboard requires **three concurrent processes**:
+
+```text
+Laravel application server
+Laravel Reverb WebSocket server
+Threat telemetry simulator
+```
+
+Open three terminal windows in the project directory.
+
+### Terminal 1 — Laravel Application
 
 ```bash
 php artisan serve
 ```
 
-Application:
+### Terminal 2 — Laravel Reverb
+
+```bash
+php artisan reverb:start
+```
+
+### Terminal 3 — Threat Telemetry Stream
+
+```bash
+php artisan telemetry:stream --interval=2
+```
+
+Then open:
 
 ```text
 http://127.0.0.1:8000
+```
+
+The telemetry simulator generates a new simulated security event every two seconds.
+
+Each generated threat event is:
+
+- persisted to SQLite
+- broadcast through Laravel Reverb
+- received by Laravel Echo
+- added to the live telemetry feed
+- reflected in dashboard severity statistics
+- included in the threat score
+- plotted on the global attack map
+
+All three processes must remain running to reproduce the full real-time SOC dashboard.
+
+Stop a process with:
+
+```text
+Ctrl + C
 ```
 
 ---
@@ -898,7 +858,7 @@ http://127.0.0.1:8000
 php artisan test
 ```
 
-Current result:
+Expected project result:
 
 ```text
 17 passed
@@ -909,15 +869,7 @@ Current result:
 
 ## Generate Sample Threat Events
 
-The `ThreatEventFactory` generates realistic test data including:
-
-```text
-IPv4 addresses
-Threat types
-Severity levels
-Country codes
-Payload descriptions
-```
+The `ThreatEventFactory` can generate database records for testing.
 
 Open Laravel Tinker:
 
@@ -925,11 +877,60 @@ Open Laravel Tinker:
 php artisan tinker
 ```
 
-Generate sample events:
+Then run:
 
 ```php
 App\Models\ThreatEvent::factory()->count(20)->create();
 ```
+
+Generated data includes:
+
+- IPv4 addresses
+- Threat types
+- Severity levels
+- Country codes
+- Payload descriptions
+
+---
+
+## Docker
+
+The repository includes a Docker configuration for running the Laravel application and API.
+
+### Build the Image
+
+```bash
+docker build -t threat-telemetry-soc .
+```
+
+### Run the Container
+
+```bash
+docker run --rm -p 8000:8000 threat-telemetry-soc
+```
+
+The application becomes available at:
+
+```text
+http://127.0.0.1:8000
+```
+
+Verify the API:
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "service": "threat-telemetry-soc"
+}
+```
+
+> The standard Docker startup runs the Laravel web application. The complete real-time dashboard additionally requires Laravel Reverb and the telemetry stream process described in the Local Development section.
 
 ---
 
@@ -940,6 +941,11 @@ App\Models\ThreatEvent::factory()->count(20)->create();
 - Threat-event database model
 - Threat-event factory
 - SOC dashboard
+- Real-time telemetry simulator
+- Laravel Reverb broadcasting
+- Laravel Echo client integration
+- Live telemetry feed
+- Live threat-map visualization
 - Health-check endpoint
 - Full CRUD REST API
 - Paginated API responses
@@ -955,12 +961,8 @@ App\Models\ThreatEvent::factory()->count(20)->create();
 - GitHub Actions CI
 - Production frontend build verification
 - Docker image
-- Docker runtime verification
-- Render-compatible Docker startup
 - API documentation
 - OpenAPI 3 specification
-- Public Render deployment
-- Live health endpoint
 - Meaningful incremental Git history
 
 ### Optional Future Improvements
@@ -971,6 +973,7 @@ App\Models\ThreatEvent::factory()->count(20)->create();
 - Interactive hosted Swagger UI
 - Rate limiting
 - Additional telemetry analytics
+- Production WebSocket infrastructure
 
 ---
 
@@ -990,10 +993,10 @@ It demonstrates:
 - Containerized environments
 - Reproducible builds
 - OpenAPI documentation
-- Production deployment
+- WebSocket broadcasting
 - Environment-based configuration
 - Incremental Git commits
-- Clear separation of public and protected API operations
+- Separation of public and protected API operations
 
 ---
 
@@ -1018,10 +1021,10 @@ Docker
         +
 OpenAPI Documentation
         +
-Cloud Deployment
+Real-Time WebSockets
 ```
 
-Rather than being only a local prototype, the application is tested, containerized, documented, continuously validated, and publicly deployed.
+The project is tested, containerized, documented, continuously validated, and includes a reproducible real-time SOC telemetry environment using Laravel Reverb.
 
 ---
 
